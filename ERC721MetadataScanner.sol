@@ -29,6 +29,7 @@ contract ERC721MetadataScanner is ChainlinkClient, ConfirmedOwner {
     uint256 private fee;
 
     event MetadataFetched(uint256 indexed tokenId, Metadata[] metadata);
+    event MetadataRequestSent(bytes32 indexed requestId, uint256 indexed tokenId, string uri);
 
     constructor(address _oracle, bytes32 _jobId, uint256 _fee, address _link) ConfirmedOwner(msg.sender) {
         setChainlinkToken(_link);
@@ -60,14 +61,16 @@ contract ERC721MetadataScanner is ChainlinkClient, ConfirmedOwner {
 
         bytes32 requestId = sendChainlinkRequestTo(oracle, request, fee);
         requests[requestId] = RequestInfo(msg.sender, tokenId, uri);
+
+        emit MetadataRequestSent(requestId, tokenId, uri);
     }
 
-    function fulfill(bytes32 _requestId, bytes32[] memory _keys, bytes32[] memory _values) public recordChainlinkFulfillment(_requestId) {
+    function fulfill(bytes32 _requestId, string[] memory _keys, string[] memory _values) public recordChainlinkFulfillment(_requestId) {
         RequestInfo memory requestInfo = requests[_requestId];
 
         Metadata[] memory offChainMetadata = new Metadata[](_keys.length);
         for (uint256 i = 0; i < _keys.length; i++) {
-            offChainMetadata[i] = Metadata(string(abi.encodePacked(_keys[i])), string(abi.encodePacked(_values[i])));
+            offChainMetadata[i] = Metadata(_keys[i], _values[i]);
         }
 
         // Merge on-chain and off-chain metadata
@@ -85,5 +88,34 @@ contract ERC721MetadataScanner is ChainlinkClient, ConfirmedOwner {
 
         emit MetadataFetched(requestInfo.tokenId, allMetadata);
     }
-}
 
+    function getMetadataByTokenId(uint256 tokenId) public view returns (Metadata[] memory) {
+        return metadataStorage[tokenId];
+    }
+
+    function getMetadataValue(uint256 tokenId, string memory key) public view returns (string memory) {
+        Metadata[] memory metadata = metadataStorage[tokenId];
+        for (uint256 i = 0; i < metadata.length; i++) {
+            if (keccak256(abi.encodePacked(metadata[i].key)) == keccak256(abi.encodePacked(key))) {
+                return metadata[i].value;
+            }
+        }
+        return "";
+    }
+
+    function setOracle(address _oracle) external onlyOwner {
+        oracle = _oracle;
+    }
+
+    function setJobId(bytes32 _jobId) external onlyOwner {
+        jobId = _jobId;
+    }
+
+    function setFee(uint256 _fee) external onlyOwner {
+        fee = _fee;
+    }
+
+    function setLinkToken(address _link) external onlyOwner {
+        setChainlinkToken(_link);
+    }
+}
