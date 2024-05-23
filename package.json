@@ -1,0 +1,20 @@
+{
+  "name": "metadata-fetcher",
+  "version": "1.0.0",
+  "description": "Advanced Metadata Fetcher System for On-Chain Assets",
+  "main": "external-adapter.js",
+  "scripts": {
+    "test": "hardhat test",
+    "deploy": "node deploy.js",
+    "configure-node": "node configure-chainlink-node.js"
+  },
+  "dependencies": {
+    "@chainlink/external-adapter": "^1.0.0",
+    "@nomiclabs/hardhat-ethers": "^2.0.0",
+    "@nomiclabs/hardhat-waffle": "^2.0.0",
+    "axios": "^0.21.1",
+    "dotenv": "^10.0.0",
+    "ethers": "^5.0.0",
+    "hardhat": "^2.6.0"
+  }
+}
