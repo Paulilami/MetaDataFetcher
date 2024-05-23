@@ -19,6 +19,7 @@ contract ERC721MetadataScanner is ChainlinkClient, ConfirmedOwner {
         address requester;
         uint256 tokenId;
         string tokenURI;
+        string queryKey;
     }
 
     mapping(bytes32 => RequestInfo) private requests;
