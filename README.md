@@ -71,7 +71,7 @@ Run the tests:
 npx hardhat test
 ```
 
-##License
+## License
 
 This project is licensed under the MIT License.
 
