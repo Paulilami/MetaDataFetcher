@@ -39,7 +39,7 @@ contract ERC721MetadataScanner is ChainlinkClient, ConfirmedOwner {
         fee = _fee;
     }
 
-    function getERC721Metadata(address tokenAddress, uint256 tokenId) public {
+    function fetchMetadata(address tokenAddress, uint256 tokenId) public {
         IERC721Metadata token = IERC721Metadata(tokenAddress);
         Metadata[] memory onChainMetadata = new Metadata[](3);
         onChainMetadata[0] = Metadata("name", token.name());
@@ -55,26 +55,25 @@ contract ERC721MetadataScanner is ChainlinkClient, ConfirmedOwner {
         }
     }
 
-    function fetchIPFSMetadata(string memory uri, uint256 tokenId) internal {
+   function fetchOffChainMetadata(string memory uri, uint256 tokenId, string memory queryKey) internal {
         Chainlink.Request memory request = buildChainlinkRequest(jobId, address(this), this.fulfill.selector);
         request.add("get", uri);
         request.add("path", ""); // Leave empty to get the full JSON
 
         bytes32 requestId = sendChainlinkRequestTo(oracle, request, fee);
-        requests[requestId] = RequestInfo(msg.sender, tokenId, uri);
+        requests[requestId] = RequestInfo(msg.sender, tokenId, uri, queryKey);
 
         emit MetadataRequestSent(requestId, tokenId, uri);
     }
 
-    function fulfill(bytes32 _requestId, string[] memory _keys, string[] memory _values) public recordChainlinkFulfillment(_requestId) {
+    function fulfill(bytes32 _requestId, bytes32[] memory _keys, bytes32[] memory _values) public recordChainlinkFulfillment(_requestId) {
         RequestInfo memory requestInfo = requests[_requestId];
 
         Metadata[] memory offChainMetadata = new Metadata[](_keys.length);
         for (uint256 i = 0; i < _keys.length; i++) {
-            offChainMetadata[i] = Metadata(_keys[i], _values[i]);
+            offChainMetadata[i] = Metadata(string(abi.encodePacked(_keys[i])), string(abi.encodePacked(_values[i])));
         }
 
-        // Merge on-chain and off-chain metadata
         uint256 totalLength = metadataStorage[requestInfo.tokenId].length + offChainMetadata.length;
         Metadata[] memory allMetadata = new Metadata[](totalLength);
         for (uint256 i = 0; i < metadataStorage[requestInfo.tokenId].length; i++) {
@@ -87,7 +86,32 @@ contract ERC721MetadataScanner is ChainlinkClient, ConfirmedOwner {
         metadataStorage[requestInfo.tokenId] = allMetadata;
         delete requests[_requestId];
 
-        emit MetadataFetched(requestInfo.tokenId, allMetadata);
+        if (bytes(requestInfo.queryKey).length > 0) {
+            Metadata[] memory filteredMetadata = filterMetadataByKey(allMetadata, requestInfo.queryKey);
+            emit MetadataFetched(requestInfo.tokenId, filteredMetadata);
+        } else {
+            emit MetadataFetched(requestInfo.tokenId, allMetadata);
+        }
+    }
+
+    function filterMetadataByKey(Metadata[] memory allMetadata, string memory key) internal pure returns (Metadata[] memory) {
+        uint256 count = 0;
+        for (uint256 i = 0; i < allMetadata.length; i++) {
+            if (keccak256(abi.encodePacked(allMetadata[i].key)) == keccak256(abi.encodePacked(key))) {
+                count++;
+            }
+        }
+
+        Metadata[] memory filteredMetadata = new Metadata[](count);
+        uint256 index = 0;
+        for (uint256 i = 0; i < allMetadata.length; i++) {
+            if (keccak256(abi.encodePacked(allMetadata[i].key)) == keccak256(abi.encodePacked(key))) {
+                filteredMetadata[index] = allMetadata[i];
+                index++;
+            }
+        }
+
+        return filteredMetadata;
     }
 
     function getMetadataByTokenId(uint256 tokenId) public view returns (Metadata[] memory) {
