@@ -37,3 +37,41 @@ PRIVATE_KEY=YOUR_PRIVATE_KEY
 CHAINLINK_NODE_URL=http://localhost:6688
 CHAINLINK_NODE_USERNAME=your-username
 CHAINLINK_NODE_PASSWORD=your-password
+```
+## Getting Started
+
+Clone the repository:
+
+```bash
+git clone https://github.com/paulilami/MetaDataFetcher.git
+cd MetaDataFetcher
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Deploy the smart contract:
+
+```bash
+npx hardhat run scripts/deploy.js --network rinkeby
+```
+
+Configure the Chainlink node:
+
+```bash
+node scripts/configure-chainlink-node.js
+```
+
+Run the tests:
+
+```bash
+npx hardhat test
+```
+
+##License
+
+This project is licensed under the MIT License.
+
