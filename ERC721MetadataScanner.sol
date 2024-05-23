@@ -58,7 +58,7 @@ contract ERC721MetadataScanner is ChainlinkClient, ConfirmedOwner {
    function fetchOffChainMetadata(string memory uri, uint256 tokenId, string memory queryKey) internal {
         Chainlink.Request memory request = buildChainlinkRequest(jobId, address(this), this.fulfill.selector);
         request.add("get", uri);
-        request.add("path", ""); // Leave empty to get the full JSON
+        request.add("path", ""); //leaving empty to get full JSON 
 
         bytes32 requestId = sendChainlinkRequestTo(oracle, request, fee);
         requests[requestId] = RequestInfo(msg.sender, tokenId, uri, queryKey);
