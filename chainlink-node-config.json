@@ -1,0 +1,30 @@
+{
+  "initiators": [
+    {
+      "type": "web"
+    }
+  ],
+  "tasks": [
+    {
+      "type": "httpget",
+      "params": {
+        "url": "http://external-adapter:8080"
+      }
+    },
+    {
+      "type": "jsonparse",
+      "params": {
+        "path": "data"
+      }
+    },
+    {
+      "type": "ethabidecodelog",
+      "params": {
+        "abi": "[{\"type\":\"function\",\"name\":\"fulfill\",\"inputs\":[{\"name\":\"_requestId\",\"type\":\"bytes32\"},{\"name\":\"_keys\",\"type\":\"bytes32[]\"},{\"name\":\"_values\",\"type\":\"bytes32[]\"}]}]"
+      }
+    },
+    {
+      "type": "ethtx"
+    }
+  ]
+}
