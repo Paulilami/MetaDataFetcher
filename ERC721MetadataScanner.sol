@@ -49,7 +49,7 @@ contract ERC721MetadataScanner is ChainlinkClient, ConfirmedOwner {
         metadataStorage[tokenId] = onChainMetadata;
 
         if (bytes(onChainMetadata[2].value).length > 0) {
-            fetchIPFSMetadata(onChainMetadata[2].value, tokenId, queryKey);
+            fetchIPFSMetadata(onChainMetadata[2].value, tokenId, queryKey); //fetchIPFSdata will be fetchOffChaindata with an extension
         } else {
             emit MetadataFetched(tokenId, onChainMetadata);
         }
